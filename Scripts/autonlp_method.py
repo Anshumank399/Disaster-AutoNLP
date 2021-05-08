@@ -2,14 +2,14 @@
 """
 Created on Sat May  8 00:38:44 2021
 
-@author: anshu
+@author: anshuman.kirty@gmail.com
 """
 
 import pandas as pd
 from autonlp import AutoNLP
 
 client = AutoNLP()
-client.login(token="api_XVqCYoASjgfNPruEsQAVSWTHaBiyOvJODu")
+client.login(token="")
 
 
 # Read Data
@@ -42,3 +42,38 @@ project.upload(
         "target": "target",
     },
 )
+
+# Start Training
+project.train()
+
+# Check Model Status
+project.refresh()
+print(project)
+
+predict = []
+result = []
+# The unlabelled Test Dataset
+test_unlabelled = pd.read_csv("Data/test.csv")
+for i in range(0, len(test_unlabelled)):
+    result.append(
+        client.predict(
+            project="disaster_detection",
+            model_id=157464,
+            input_text=test_unlabelled["text"][i],
+        )[0]
+    )
+
+
+def get_prediction_value(result):
+    result = pd.DataFrame(result)
+    zero_score = float(result[result["label"] == "0"]["score"])
+    one_score = float(result[result["label"] == "1"]["score"])
+    if one_score >= zero_score:
+        return 1
+    else:
+        return 0
+
+
+# test_unlabelled = test_unlabelled[:306]
+test_unlabelled["result"] = result
+test_unlabelled["Predicted"] = test_unlabelled["result"].apply(get_prediction_value)
